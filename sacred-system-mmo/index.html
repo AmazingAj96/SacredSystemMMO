@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sacred System MMO – Magically Multiplayer Online Game</title>
+  <style>
+    body {
+      background: linear-gradient(to bottom right, #2b1055, #7597de);
+      font-family: 'Trebuchet MS', sans-serif;
+      color: #fff;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      margin-top: 30px;
+      font-size: 2em;
+      color: #ffdd57;
+      text-shadow: 2px 2px 5px #000;
+    }
+    #hud {
+      margin: 20px auto;
+      width: 90%;
+      max-width: 600px;
+      background: rgba(0,0,0,0.5);
+      padding: 15px;
+      border-radius: 10px;
+    }
+    #xp-bar-container {
+      background: rgba(255,255,255,0.2);
+      border-radius: 5px;
+      height: 20px;
+      margin-top: 5px;
+      overflow: hidden;
+    }
+    #xp-bar {
+      height: 20px;
+      width: 0%;
+      background: linear-gradient(to right, #ffdd57, #ff7f50);
+      transition: width 0.3s ease-in-out;
+    }
+    #chat-box {
+      width: 90%;
+      max-width: 600px;
+      margin: 20px auto;
+      text-align: left;
+      background: rgba(0,0,0,0.4);
+      padding: 15px;
+      border-radius: 10px;
+      height: 300px;
+      overflow-y: scroll;
+    }
+    #chat-input {
+      width: 70%;
+      padding: 8px;
+      border-radius: 5px;
+      border: none;
+      outline: none;
+    }
+    #send-btn {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      background: #ff7f50;
+      color: #fff;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    #send-btn:hover {
+      background: #ff5722;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌟 Sacred System MMO 🌟<br>Magically Multiplayer Online Game</h1>
+
+  <div id="hud">
+    <h3>Player HUD</h3>
+    <p>Level: <span id="level">1</span></p>
+    <p>XP: <span id="xp">0</span></p>
+    <div id="xp-bar-container">
+      <div id="xp-bar"></div>
+    </div>
+  </div>
+
+  <div id="chat-box"></div>
+  <input type="text" id="chat-input" placeholder="Type your action or message..." />
+  <button id="send-btn">Send</button>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const chatBox = document.getElementById('chat-box');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+    const xpBar = document.getElementById('xp-bar');
+    const xpDisplay = document.getElementById('xp');
+    const levelDisplay = document.getElementById('level');
+
+    sendBtn.onclick = () => {
+      if(chatInput.value.trim() !== '') {
+        socket.emit('player message', chatInput.value);
+        chatInput.value = '';
+      }
+    };
+
+    socket.on('atlas message', msg => {
+      const p = document.createElement('p');
+      p.textContent = msg;
+      chatBox.appendChild(p);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    socket.on('hud update', hud => {
+      xpDisplay.textContent = hud.xp;
+      levelDisplay.textContent = hud.level;
+      const percent = Math.min((hud.xp % 100) , 100);
+      xpBar.style.width = percent + '%';
+    });
+  </script>
+</body>
+</html>
