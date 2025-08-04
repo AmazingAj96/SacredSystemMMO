@@ -1,37 +1,124 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sacred System MMO – Magically Multiplayer Online Game</title>
-  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #1a0933, #3c1361, #5f0a87);
+      color: #fff;
+      font-family: 'Trebuchet MS', sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      color: #ffd700;
+      text-shadow: 0 0 20px #ff69b4, 0 0 40px #ff69b4;
+      margin-bottom: 0.3em;
+    }
+
+    h2 {
+      color: #adff2f;
+      text-shadow: 0 0 15px #7fff00;
+    }
+
+    #players {
+      margin-top: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .player-card {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #ffd700;
+      border-radius: 12px;
+      padding: 15px 20px;
+      margin: 10px;
+      min-width: 180px;
+      box-shadow: 0 0 15px #ffd70077;
+      transition: transform 0.3s ease;
+    }
+
+    .player-card:hover {
+      transform: scale(1.05);
+    }
+
+    .player-name {
+      font-size: 1.4em;
+      color: #ff69b4;
+    }
+
+    .player-level {
+      font-size: 1.1em;
+      color: #00ffff;
+    }
+
+    .magic-pulse {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 10px #ffd70077; }
+      50% { box-shadow: 0 0 25px #ff69b477; }
+      100% { box-shadow: 0 0 10px #ffd70077; }
+    }
+  </style>
 </head>
 <body>
-  <h1>🌌 Sacred System MMO</h1>
-  <ul id="log"></ul>
+  <h1>✨ Sacred System MMO ✨</h1>
+  <h2>The Magically Multiplayer Online Game</h2>
 
-  <script>
-    const socket = io("https://YOUR-RENDER-URL.onrender.com"); // Replace with your Render server URL
-    const log = document.getElementById("log");
+  <div id="players"></div>
 
-    socket.on("gameLog", (data) => {
-      log.innerHTML = "";
-      data.forEach(entry => addLog(entry));
-    });
+  <script type="module" src="./firebase.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { firebaseConfig } from './firebase.js';
 
-    socket.on("gameUpdate", (data) => addLog(data));
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-    function addLog(entry) {
-      const li = document.createElement("li");
-      li.textContent = `${entry.player}: ${entry.action}`;
-      log.appendChild(li);
+    // Update player status
+    function updatePlayerStatus(name, level) {
+      set(ref(db, 'players/' + name), {
+        name: name,
+        level: level,
+        lastSeen: Date.now()
+      });
     }
 
-    // EXAMPLE: Sending an action from ChatGPT or a button click
-    function sendAction(player, action) {
-      socket.emit("action", { player, action });
+    // Listen for player updates
+    function listenForPlayers() {
+      const playersRef = ref(db, 'players/');
+      onValue(playersRef, (snapshot) => {
+        const data = snapshot.val();
+        const container = document.getElementById('players');
+        container.innerHTML = ''; // Clear
+
+        for (const key in data) {
+          const player = data[key];
+          const card = document.createElement('div');
+          card.className = 'player-card magic-pulse';
+          card.innerHTML = `
+            <div class="player-name">${player.name}</div>
+            <div class="player-level">Level ${player.level}</div>
+          `;
+          container.appendChild(card);
+        }
+      });
     }
 
-    // For testing:
-    // sendAction("Aj", "💥 Cast Flame Burst");
+    // Start listening
+    listenForPlayers();
+
+    // Example test: set your own player (replace with your real logic)
+    updatePlayerStatus("Aj", 108); 
   </script>
 </body>
 </html>
