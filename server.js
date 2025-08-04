@@ -1,42 +1,22 @@
-const express = require("express");
-const http = require("http");
-const socketIo = require("socket.io");
-const cors = require("cors");
-
+const express = require('express');
+const path = require('path');
 const app = express();
-app.use(cors());
-const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
-});
-
-// Store messages, events, and actions
-let gameLog = [];
-
-io.on("connection", (socket) => {
-  console.log("🔥 New player connected");
-
-  // Send current game state to the new player
-  socket.emit("gameLog", gameLog);
-
-  // Listen for actions from ChatGPT/MMO client
-  socket.on("action", (data) => {
-    console.log("📜 Action received:", data);
-
-    // Save the action and broadcast to all players
-    gameLog.push(data);
-    io.emit("gameUpdate", data);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("❌ Player disconnected");
-  });
-});
-
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`✅ Sacred System MMO server running on port ${PORT}`);
+
+// Serve all static files (HTML, CSS, JS) from the current directory
+app.use(express.static(__dirname));
+
+// Root route: serve index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Example test route (optional)
+app.get('/ping', (req, res) => {
+  res.send('🔥 Sacred System MMO Server is Running!');
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`🔥 Sacred System MMO server running on port ${PORT}`);
 });
