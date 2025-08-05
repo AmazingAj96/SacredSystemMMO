@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🌌 Sacred Multiverse Dashboard</title>
+  <style>
+    body { background:#0a0a1a; color:white; font-family:Arial; }
+    h1 { text-align:center; color:#ffcc88; }
+    .section { margin:20px; padding:10px; border:1px solid #333; border-radius:10px; background:#111; }
+    .event { margin:5px 0; padding:5px; background:#222; border-radius:5px; }
+    .npc { color:#88ccff; }
+    .raid { color:#ff8888; }
+  </style>
+</head>
+<body>
+  <h1>🌌 Sacred Multiverse Live Feed</h1>
+
+  <div class="section">
+    <h2>🌀 Active NPCs</h2>
+    <div id="npc-list">Loading...</div>
+  </div>
+
+  <div class="section">
+    <h2>⚔️ Active Raids</h2>
+    <div id="raid-list">Loading...</div>
+  </div>
+
+  <div class="section">
+    <h2>📖 Sacred Logs</h2>
+    <div id="log-list">Loading...</div>
+  </div>
+
+  <script type="module">
+    import { db } from './firebase.js';
+    import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // NPCs
+    onValue(ref(db, 'npcs'), (snapshot) => {
+      const npcList = document.getElementById('npc-list');
+      npcList.innerHTML = '';
+      snapshot.forEach(child => {
+        npcList.innerHTML += `<div class="event npc">${child.key}: ${child.val().status}</div>`;
+      });
+    });
+
+    // Raids
+    onValue(ref(db, 'raids'), (snapshot) => {
+      const raidList = document.getElementById('raid-list');
+      raidList.innerHTML = '';
+      snapshot.forEach(child => {
+        raidList.innerHTML += `<div class="event raid">${child.key}: ${child.val().description}</div>`;
+      });
+    });
+
+    // Sacred Logs
+    onValue(ref(db, 'logs'), (snapshot) => {
+      const logList = document.getElementById('log-list');
+      logList.innerHTML = '';
+      snapshot.forEach(child => {
+        const log = child.val();
+        logList.innerHTML += `<div class="event">[${log.Time}] ${log.Type} - ${log.Note}</div>`;
+      });
+    });
+  </script>
+</body>
+</html>
