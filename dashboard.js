@@ -1,6 +1,9 @@
+// 🌌 Sacred Multiverse Dashboard v2
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+// 🔹 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyACQKI02JmztkNkC8sscx0wqq5Ppjn2oKs",
   authDomain: "sacredsystemmmo.firebaseapp.com",
@@ -11,73 +14,46 @@ const firebaseConfig = {
   appId: "1:854698379558:web:c4ec0830a05bcad854d9e7"
 };
 
-// Initialize Firebase
+// 🔹 Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Get references
-const playersRef = ref(db, 'sacredSystem/players');
-const npcsRef = ref(db, 'sacredSystem/npcs');
-const raidsRef = ref(db, 'sacredSystem/multiplayerStatus');
-const logsRef = ref(db, 'sacredSystem/magicMoments');
-
-// Load Active Players
-onValue(playersRef, (snapshot) => {
-    const data = snapshot.val();
-    const container = document.getElementById('playersList');
-    container.innerHTML = '';
-
-    if (data) {
-        Object.keys(data).forEach(name => {
-            const player = data[name];
-            container.innerHTML += `<div>🎮 <b>${name}</b> - ${player.status} | Lvl ${player.level} | ${player.sacredTitle}</div>`;
-        });
-    } else {
-        container.innerHTML = '<div>No players online</div>';
+// 🔹 Utility to render sections
+function renderSection(refName, elementId, formatter) {
+  const listEl = document.getElementById(elementId);
+  onValue(ref(db, refName), (snapshot) => {
+    listEl.innerHTML = "";
+    if (!snapshot.exists()) {
+      listEl.innerHTML = `<div class="event">No data yet...</div>`;
+      return;
     }
+
+    snapshot.forEach((child) => {
+      const val = child.val();
+      const div = document.createElement("div");
+      div.className = "event";
+      div.innerHTML = formatter(child.key, val);
+      listEl.appendChild(div);
+    });
+  });
+}
+
+// 🧙 Players
+renderSection("players", "player-list", (key, val) => {
+  return `<span class="player">${key}</span> — ${val.status || "Online"}`;
 });
 
-// Load NPCs
-onValue(npcsRef, (snapshot) => {
-    const data = snapshot.val();
-    const container = document.getElementById('npcsList');
-    container.innerHTML = '';
-
-    if (data) {
-        Object.keys(data).forEach(npc => {
-            container.innerHTML += `<div>🤖 ${npc}</div>`;
-        });
-    } else {
-        container.innerHTML = '<div>No active NPCs</div>';
-    }
+// 🌀 NPCs
+renderSection("npcs", "npc-list", (key, val) => {
+  return `<span class="npc">${key}</span> — ${val.status || "Idle"}`;
 });
 
-// Load Raids (from multiplayerStatus)
-onValue(raidsRef, (snapshot) => {
-    const data = snapshot.val();
-    const container = document.getElementById('raidsList');
-    container.innerHTML = '';
-
-    if (data) {
-        Object.keys(data).forEach(raid => {
-            container.innerHTML += `<div>⚔️ Raid: ${raid}</div>`;
-        });
-    } else {
-        container.innerHTML = '<div>No active raids</div>';
-    }
+// ⚔️ Raids
+renderSection("raids", "raid-list", (key, val) => {
+  return `<span class="raid">${key}</span> — ${val.description || "Active Raid"}`;
 });
 
-// Load Logs (magicMoments)
-onValue(logsRef, (snapshot) => {
-    const data = snapshot.val();
-    const container = document.getElementById('logsList');
-    container.innerHTML = '';
-
-    if (data) {
-        Object.keys(data).forEach(logKey => {
-            container.innerHTML += `<div>📖 ${logKey}: ${data[logKey]}</div>`;
-        });
-    } else {
-        container.innerHTML = '<div>No sacred logs</div>';
-    }
+// 📖 Logs
+renderSection("logs", "log-list", (key, val) => {
+  return `[${val.Time || "???"}] ${val.Type || "Event"} — ${val.Note || ""}`;
 });
