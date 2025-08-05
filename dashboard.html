@@ -1,87 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>🌌 Sacred Multiverse Live Feed</title>
-  <style>
-    body { background:#0a0a1a; color:white; font-family:Arial; }
-    h1 { text-align:center; color:#ffcc88; }
-    .section { margin:20px; padding:10px; border:1px solid #333; border-radius:10px; background:#111; }
-    .event { margin:5px 0; padding:5px; background:#222; border-radius:5px; }
-    .npc { color:#88ccff; }
-    .raid { color:#ff8888; }
-    .player { color:#88ff88; }
-    .log { color:#cccccc; }
-  </style>
+    <meta charset="UTF-8">
+    <title>🌌 Sacred Multiverse Live Feed</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f7f7f7;
+            color: #222;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            margin-top: 0;
+        }
+        .item {
+            padding: 5px 0;
+        }
+    </style>
 </head>
 <body>
-  <h1>🌌 Sacred Multiverse Live Feed</h1>
 
-  <!-- Active Players -->
-  <div class="section">
-    <h2>🌟 Active Players</h2>
-    <div id="player-list">Loading...</div>
-  </div>
+    <h1>🌌 Sacred Multiverse Live Feed</h1>
 
-  <!-- Active NPCs -->
-  <div class="section">
-    <h2>🌀 Active NPCs</h2>
-    <div id="npc-list">Loading...</div>
-  </div>
+    <div class="section">
+        <h2>🌟 Active Players</h2>
+        <div id="activePlayers">Loading...</div>
+    </div>
 
-  <!-- Active Raids -->
-  <div class="section">
-    <h2>⚔️ Active Raids</h2>
-    <div id="raid-list">Loading...</div>
-  </div>
+    <div class="section">
+        <h2>🔮 Active NPCs</h2>
+        <div id="activeNPCs">Loading...</div>
+    </div>
 
-  <!-- Sacred Logs -->
-  <div class="section">
-    <h2>📖 Sacred Logs</h2>
-    <div id="log-list">Loading...</div>
-  </div>
+    <div class="section">
+        <h2>⚔️ Active Raids</h2>
+        <div id="activeRaids">Loading...</div>
+    </div>
 
-  <script type="module">
-    import { db } from './firebase.js';
-    import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    <div class="section">
+        <h2>📖 Sacred Logs</h2>
+        <div id="sacredLogs">Loading...</div>
+    </div>
 
-    // Active Players
-    onValue(ref(db, 'players'), (snapshot) => {
-      const playerList = document.getElementById('player-list');
-      playerList.innerHTML = '';
-      snapshot.forEach(child => {
-        const player = child.val();
-        playerList.innerHTML += `<div class="event player">${player.name} - Level ${player.level} (${player.status})</div>`;
-      });
-    });
+    <!-- Firebase and Live Data Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // NPCs
-    onValue(ref(db, 'npcs'), (snapshot) => {
-      const npcList = document.getElementById('npc-list');
-      npcList.innerHTML = '';
-      snapshot.forEach(child => {
-        npcList.innerHTML += `<div class="event npc">${child.key}: ${child.val().status}</div>`;
-      });
-    });
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyACQKI02JmztkNkC8sscx0wqq5Ppjn2oKs",
+            authDomain: "sacredsystemmmo.firebaseapp.com",
+            databaseURL: "https://sacredsystemmmo-default-rtdb.firebaseio.com",
+            projectId: "sacredsystemmmo",
+            storageBucket: "sacredsystemmmo.firebasestorage.app",
+            messagingSenderId: "854698379558",
+            appId: "1:854698379558:web:c4ec0830a05bcad854d9e7"
+        };
 
-    // Raids
-    onValue(ref(db, 'raids'), (snapshot) => {
-      const raidList = document.getElementById('raid-list');
-      raidList.innerHTML = '';
-      snapshot.forEach(child => {
-        raidList.innerHTML += `<div class="event raid">${child.key}: ${child.val().description}</div>`;
-      });
-    });
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-    // Sacred Logs
-    onValue(ref(db, 'logs'), (snapshot) => {
-      const logList = document.getElementById('log-list');
-      logList.innerHTML = '';
-      snapshot.forEach(child => {
-        const log = child.val();
-        logList.innerHTML += `<div class="event log">[${log.Time}] ${log.Type} - ${log.Note}</div>`;
-      });
-    });
-  </script>
+        // --- Active Players ---
+        const playersRef = ref(db, 'sacredSystem/players');
+        onValue(playersRef, (snapshot) => {
+            const data = snapshot.val();
+            const container = document.getElementById('activePlayers');
+            container.innerHTML = '';
+            if (data) {
+                Object.entries(data).forEach(([name, info]) => {
+                    container.innerHTML += `
+                        <div class="item">
+                            <strong>${name}</strong> 
+                            - Level ${info.level}, XP: ${info.xp}, Status: ${info.status} <br>
+                            <em>${info.sacredTitle}</em>
+                        </div>
+                    `;
+                });
+            } else {
+                container.innerHTML = 'No active players';
+            }
+        });
+
+        // --- Active NPCs ---
+        const npcsRef = ref(db, 'sacredSystem/npcs');
+        onValue(npcsRef, (snapshot) => {
+            const data = snapshot.val();
+            const container = document.getElementById('activeNPCs');
+            container.innerHTML = '';
+            if (data) {
+                Object.entries(data).forEach(([name, info]) => {
+                    container.innerHTML += `<div class="item"><strong>${name}</strong> - ${info.status || 'active'}</div>`;
+                });
+            } else {
+                container.innerHTML = 'No active NPCs';
+            }
+        });
+
+        // --- Active Raids ---
+        const raidsRef = ref(db, 'sacredSystem/multiplayerStatus/activeRaids');
+        onValue(raidsRef, (snapshot) => {
+            const data = snapshot.val();
+            const container = document.getElementById('activeRaids');
+            container.innerHTML = '';
+            if (data) {
+                Object.entries(data).forEach(([raidName, raidInfo]) => {
+                    container.innerHTML += `<div class="item"><strong>${raidName}</strong> - ${raidInfo.status || 'active'}</div>`;
+                });
+            } else {
+                container.innerHTML = 'No active raids';
+            }
+        });
+
+        // --- Sacred Logs ---
+        const logsRef = ref(db, 'sacredSystem/magicMoments');
+        onValue(logsRef, (snapshot) => {
+            const data = snapshot.val();
+            const container = document.getElementById('sacredLogs');
+            container.innerHTML = '';
+            if (data) {
+                Object.entries(data).reverse().forEach(([logId, log]) => {
+                    container.innerHTML += `<div class="item">✨ ${log.description || logId}</div>`;
+                });
+            } else {
+                container.innerHTML = 'No sacred logs yet';
+            }
+        });
+    </script>
+
 </body>
 </html>
